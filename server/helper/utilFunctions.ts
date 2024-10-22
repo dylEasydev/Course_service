@@ -1,6 +1,6 @@
 export function joinTags(searchTerms?:string[]){
-    return new Promise<string[]>(resolve=>{
-        if(!searchTerms)resolve([]);
+    return new Promise<string[]|undefined>(resolve=>{
+        if(!searchTerms)resolve(undefined);
         else{
             const tabTags = new Set<string>();
             searchTerms.forEach(terms =>{

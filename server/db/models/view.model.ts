@@ -9,10 +9,10 @@ export class View extends Model<
     InferCreationAttributes<View>
 >implements ViewInterface{
     declare id:CreationOptional<number>;
-    declare userId?:User['id'];
+    declare userId?:CreationOptional<User['id']|null>;
     declare nameTable:string;
     declare foreingId:number;
-    declare ip_user:string;
+    declare ip_user?:CreationOptional<string|null>;
 
     declare readonly createdAt:CreationOptional<Date>;
     declare readonly updatedAt:CreationOptional<Date>;

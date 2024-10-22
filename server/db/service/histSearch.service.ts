@@ -4,15 +4,23 @@ import { HistSearchServiceInterface } from './interface';
 
 class HistSearchService implements HistSearchServiceInterface{
     
-    createHistSearch<T extends { searchTerms: string; }>(value: T, ip: string, userId?: number){
+    createHistSearch<T extends { searchTerms: string; }>(value: T, ip?: string, userId?: number){
         return new Promise<HistSearchInterface>(async (resolve, reject) => {
             try {
                 const newHist = await sequelizeConnect.transaction(async t=>{
-                    return await HistSearch.create({
-                        searchTerm:value.searchTerms,
-                        ip_user:ip,
-                        userId
+                    const [histFind] = await HistSearch.findOrCreate({
+                        where:{
+                            searchTerm:value.searchTerms,
+                            ip_user:ip?ip:null,
+                            userId:userId?userId:null
+                        },
+                        defaults:{
+                            searchTerm:value.searchTerms,
+                            ip_user:ip?ip:null,
+                            userId:userId?userId:null
+                        }
                     });
+                    return histFind;
                 });
                 resolve(newHist);
             } catch (error) {
@@ -21,14 +29,14 @@ class HistSearchService implements HistSearchServiceInterface{
         })
     }
 
-    findAllHistSearch(ip: string, userId?: number){
+    findAllHistSearch(ip?: string, userId?: number){
         return new Promise<HistSearchInterface[]>(async (resolve, reject) => {
             try {
                 const tabHist = await sequelizeConnect.transaction(async t=>{
                     return await HistSearch.findAll({
                         where:{
-                            ip_user:ip,
-                            userId
+                            ip_user:ip?ip:null,
+                            userId:userId?userId:null
                         }
                     });
                 });
@@ -52,15 +60,16 @@ class HistSearchService implements HistSearchServiceInterface{
         })
     }
 
-    deleteAllHistSearch(ip: string, userId?: number){
+    deleteAllHistSearch(ip?: string, userId?: number){
         return new Promise<void>(async (resolve, reject) => {
             try {
                 await sequelizeConnect.transaction(async t=>{
                     await HistSearch.destroy({
                         where:{
-                            ip_user:ip,
-                            userId
-                        }
+                            ip_user:ip?ip:null,
+                            userId:userId?userId:null
+                        },
+                        force:true
                     });
                 });
                 resolve();

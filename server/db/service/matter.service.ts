@@ -4,10 +4,10 @@ import axios,{ AxiosInstance } from 'axios';
 
 export class RequestError extends Error{
     public status:number;
-    public data:any;
+    public data:unknown;
     constructor(
         status:number,
-        data:any,
+        data:unknown,
         message?:string
     ){
         super(message);
@@ -23,7 +23,9 @@ export class MatterService implements MatterServiceInterface{
             baseURL:'http://localhost:3003/',
             timeout:3000,
             headers:{
-                Authorization:`Bearer ${jeton}`
+                Authorization:`Bearer ${jeton}`,
+                Connection:"keep-alive",
+                Upgrade:"h2"
             }
         })
     }
@@ -31,7 +33,7 @@ export class MatterService implements MatterServiceInterface{
         return new Promise<{message:string; data:Matter;}>(async(resolve, reject) => {
             try {
                 const matterFind = await this.axiosRequest.get<
-                {message:string; data:any;}
+                {message:string; data:unknown;}
                 >(`/matter/${matterId}`,{
                     validateStatus:(status:number)=>{return status < 500}
                 });
@@ -44,6 +46,29 @@ export class MatterService implements MatterServiceInterface{
                         )
                     )
                 }else resolve(matterFind.data as {message:string,data:Matter}); 
+            } catch (error) {
+               reject(error);
+            }
+        })
+    }
+
+    getMatterUser(userId: number): Promise<{ message: string; data: Matter[]; }> {
+        return new Promise<{message:string; data:Matter[];}>(async(resolve, reject) => {
+            try {
+                const matterFind = await this.axiosRequest.get<
+                {message:string; data:unknown;}
+                >(`/user/${userId}`,{
+                    validateStatus:(status:number)=>{return status < 500}
+                });
+                if(matterFind.status < 200 || matterFind.status > 300){
+                    reject(
+                        new RequestError(
+                            matterFind.status,
+                            matterFind.data.data,
+                            matterFind.data.message
+                        )
+                    )
+                }else resolve(matterFind.data as {message:string,data:Matter[]}); 
             } catch (error) {
                reject(error);
             }

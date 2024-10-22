@@ -70,7 +70,9 @@ class PlaylistService implements PlaylistServiceInterface{
                                 {subjectId},
                                 {
                                     playlistName:{
-                                        [Op.like]:`%${search}%`
+                                        [Op.like]:{
+                                            [Op.any]:search?search.split('').map(chaine=>`%${chaine}%`):['']
+                                        }
                                     }
                                 }
                             ]
@@ -344,13 +346,15 @@ class PlaylistService implements PlaylistServiceInterface{
                         where:{
                             [Op.and]:[
                                 {
-                                    deletedAt:{
-                                        [Op.not]:undefined
+                                    playlistName:{
+                                        [Op.like]:{
+                                            [Op.any]:search?search.split('').map(chaine=>`%${chaine}%`):['']
+                                        }
                                     }
                                 },
                                 {
-                                    playlistName:{
-                                        [Op.like]:`%${search}%`
+                                    deletedAt:{
+                                        [Op.not]:null
                                     }
                                 }
                             ]
@@ -610,7 +614,7 @@ class PlaylistService implements PlaylistServiceInterface{
                             }
                         ],
                     });
-                    await playlistRestore?.restore();
+                    if(playlistRestore)await playlistRestore.restore();
                     return playlistRestore
                 });
                 resolve(playlistFind);

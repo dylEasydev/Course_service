@@ -1,7 +1,7 @@
 import { Response ,Request } from 'express';
 import { CodeStatut, generateToken, statusResponse } from '../helper';
 import { Token } from '../db';
-import {JsonWebTokenError , NotBeforeError , TokenExpiredError} from 'jsonwebtoken';
+import { JsonWebTokenError , NotBeforeError ,TokenExpiredError } from 'jsonwebtoken';
 
 class AuthToken {
 
@@ -28,9 +28,9 @@ class AuthToken {
             req.body.token = await generateToken.verifyToken<Token>(token);
             next();
        } catch (error) {
-            if((error instanceof JsonWebTokenError)||(error instanceof NotBeforeError)||(error instanceof TokenExpiredError)){
+            if((error instanceof TokenExpiredError) || (error instanceof JsonWebTokenError ) || (error instanceof NotBeforeError)){
                 return statusResponse.sendResponseJson(
-                    CodeStatut.CLIENT_STATUS,
+                    CodeStatut.NOT_PERMISSION_STATUS, 
                     res,
                     error.message,
                     error
@@ -42,6 +42,53 @@ class AuthToken {
                 `Erreur au niveau du serveur réesayer plus tard !`
             )
        }
+    }
+
+    async verifTokenExist(req:Request , res:Response ,next:()=>void){
+        try {
+            const bearerToken = req.headers.authorization;
+            const token = bearerToken?.split(' ')[1];
+            if(token) req.body.token = await generateToken.verifyToken<Token>(token);
+            next();
+       } catch (error) {
+       console.log(error);
+            if((error instanceof TokenExpiredError) || (error instanceof JsonWebTokenError ) || (error instanceof NotBeforeError)){
+                next();
+            }
+            return statusResponse.sendResponseJson(
+                CodeStatut.SERVER_STATUS,
+                res,
+                `Erreur au niveau du serveur réesayer plus tard !`
+            )
+       }
+    }
+
+    verifPermToken(permName: string){
+        return async (req:Request , res:Response , next:()=>void)=>{
+            const token = req.body.token as Token
+            if(typeof token.scope ==='string'){
+                if(token.scope !== permName)
+                    return statusResponse.sendResponseJson(
+                        CodeStatut.NOT_PERMISSION_STATUS,
+                        res,
+                        `Aucune permissions !`
+                    );
+            }else if(typeof token.scope === 'undefined'){
+                return statusResponse.sendResponseJson(
+                    CodeStatut.NOT_PERMISSION_STATUS,
+                    res,
+                    `Aucune permissions !`
+                );
+            }else{
+                if(!token.scope.includes(permName))
+                    return statusResponse.sendResponseJson(
+                        CodeStatut.NOT_PERMISSION_STATUS,
+                        res,
+                        `Aucune permissions !`
+                    );
+                next();
+            }
+        }
     }
 }
 

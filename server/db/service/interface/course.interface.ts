@@ -2,7 +2,7 @@ import { CourseInterface, Matter } from '../../interface';
 
 export interface CourseServiceInterface {
     createCourse(title:string , matter:Matter):Promise<CourseInterface>;
-    updateCourse(instance: CourseInterface , title:string):Promise<CourseInterface>;
+    updateCourse(instance: CourseInterface , title?:string):Promise<CourseInterface>;
     findCourseById(id:number):Promise<CourseInterface | null>;
     findCourseOfMatter(subjectId:number,limit?:number,search?:string):Promise<{rows:CourseInterface[]; count:number;}>;
     deleteCourse(instance:CourseInterface):Promise<void>;

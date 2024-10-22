@@ -12,13 +12,16 @@ class VideoService implements VideoServiceInterface{
             try {
                 const newVideo = await sequelizeConnect.transaction(async t=>{
                     return await Video.create({
-                        ...value,
+                        title:value.title,
+                        url:value.url,
+                        tags:value.tags,
+                        level:value.level,
                         courseId:course.id
                     });
                 });
                 resolve(newVideo);
             } catch (error) {
-                reject(error)
+                reject(error);
             }
         })
     }
@@ -30,7 +33,7 @@ class VideoService implements VideoServiceInterface{
                 const videoUpdate = await sequelizeConnect.transaction(async t=>{
                     return await instance.update(value);
                 });
-                resolve(videoUpdate)
+                resolve(videoUpdate);
             } catch (error) {
                 reject(error);
             }
@@ -109,9 +112,9 @@ class VideoService implements VideoServiceInterface{
     findAll(limit?: number, search=''){
         return new  Promise<{ rows: Video[]; count: number; }> (async (resolve , reject)=>{
             try {
-                const tagTable = search.split(' ').map(tag=>{
+                const tagTable = search? search.split(' ').map(tag=>{
                     return `#${tag}`;
-                });
+                }):undefined;
     
                 const tableVideo = await sequelizeConnect.transaction(async t=>{
                     return await Video.findAndCountAll({
@@ -120,7 +123,7 @@ class VideoService implements VideoServiceInterface{
                                 {
                                     title:{
                                         [Op.like]:{
-                                            [Op.any]:search.split(' ').map(chaine=>`%${chaine}%`)
+                                            [Op.any]:search?search.split(' ').map(chaine=>`%${chaine}%`):['']
                                         }
                                     }
                                 },
@@ -210,7 +213,7 @@ class VideoService implements VideoServiceInterface{
                                 {
                                     title:{
                                         [Op.like]:{
-                                            [Op.any]:tagsTable.map(tags=>`%${tags.substring(1)}%`)
+                                            [Op.any]:tagsTable?tagsTable.map(tags=>`%${tags.substring(1)}%`):['']
                                         }
                                     }
                                 },
@@ -420,9 +423,9 @@ class VideoService implements VideoServiceInterface{
     findAllSuspend(limit?: number, search=''){
         return new  Promise<{ rows: Video[]; count: number; }> (async (resolve , reject)=>{
             try {
-                const tagTable = search.split(' ').map(tag=>{
+                const tagTable = search? search.split(' ').map(tag=>{
                     return `#${tag}`;
-                });
+                }):undefined;
     
                 const tableVideo = await sequelizeConnect.transaction(async t=>{
                     return await Video.findAndCountAll({
@@ -434,11 +437,11 @@ class VideoService implements VideoServiceInterface{
                                         {
                                             title:{
                                                 [Op.like]:{
-                                                    [Op.any]:search.split(' ').map(chaine=>`%${chaine}%`)
+                                                    [Op.any]:search?search.split(' ').map(chaine=>`%${chaine}%`):['']
                                                 }
                                             },
                                             deletedAt:{
-                                                [Op.not]:undefined
+                                                [Op.not]:null
                                             }
                                         }
                                     ]
@@ -452,7 +455,7 @@ class VideoService implements VideoServiceInterface{
                                         },
                                         {
                                             deletedAt:{
-                                                [Op.not]:undefined
+                                                [Op.not]:null
                                             }
                                         }
                                     ]
@@ -590,7 +593,7 @@ class VideoService implements VideoServiceInterface{
                         }
                     });
 
-                    await videoRestore?.restore();
+                    if(videoRestore)await videoRestore.restore();
                     return videoRestore;
                 });
                 resolve(videoFind);

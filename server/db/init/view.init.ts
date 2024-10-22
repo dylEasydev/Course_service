@@ -12,11 +12,10 @@ View.init({
     },
     ip_user:{
         type:DataTypes.STRING,
-        allowNull:false,
+        allowNull:true,
         validate:{
             isIP:{msg:`Veillez fournir une adresse IP !`}
-        },
-        unique:'ip_constraint'
+        }
     },
     foreingId:{
         type:DataTypes.INTEGER,

@@ -10,8 +10,8 @@ export class HistSearch extends Model<
 >implements HistSearchInterface{
     declare id:CreationOptional<number>;
     declare searchTerm:string;
-    declare ip_user:string;
-    declare userId?:User['id'];
+    declare ip_user:CreationOptional<string|null>;
+    declare userId:CreationOptional<User['id']|null>;
     
     declare readonly createdAt:CreationOptional<Date>;
     declare readonly updatedAt:CreationOptional<Date>;

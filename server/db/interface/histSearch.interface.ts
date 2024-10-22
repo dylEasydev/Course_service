@@ -10,8 +10,8 @@ export interface HistSearchInterface extends Model<
 > {
     id:CreationOptional<number>;
     searchTerm:string;
-    ip_user:string;
-    userId?:User['id'];
+    ip_user:CreationOptional<string|null>;
+    userId:CreationOptional<User['id']|null>;
     
     readonly createdAt:CreationOptional<Date>;
     readonly updatedAt:CreationOptional<Date>;

@@ -195,7 +195,7 @@ class DocService implements DocServiceInterface{
                             ]
                         }
                     });
-                    await docRestore?.restore();
+                    if(docRestore)docRestore.restore();
                     return docRestore;
                 })
                 resolve(docFind);
@@ -207,9 +207,9 @@ class DocService implements DocServiceInterface{
     findAll(limit?: number, search = ''){
         return new Promise<{rows:Doc[] , count:number}>(async (resolve, reject) => {
             try {
-                const tagTable = search.split(' ').map(tag=>{
+                const tagTable =search? search.split(' ').map(tag=>{
                     return `#${tag}`;
-                });
+                }):undefined;
     
                 const tableDoc = await sequelizeConnect.transaction(async t=>{
                     return await Doc.findAndCountAll({
@@ -218,7 +218,7 @@ class DocService implements DocServiceInterface{
                                 {
                                     title:{
                                         [Op.like]:{
-                                            [Op.any]:search.split(' ').map(chaine=>`%${chaine}%`)
+                                            [Op.any]:search?search.split(' ').map(chaine=>`%${chaine}%`):['']
                                         }
                                     }
                                 },
@@ -392,7 +392,7 @@ class DocService implements DocServiceInterface{
                                 {
                                     title:{
                                         [Op.like]:{
-                                            [Op.any]:tagsTable.map(tags=>`%${tags.substring(1)}%`)
+                                            [Op.any]:tagsTable?tagsTable.map(tags=>`%${tags.substring(1)}%`):['']
                                         }
                                     }
                                 },
@@ -494,9 +494,9 @@ class DocService implements DocServiceInterface{
     findAllSuspend(limit?: number, search = ''){
         return new Promise<{rows:Doc[] , count:number}>(async (resolve, reject) => {
             try {
-                const tagTable = search.split(' ').map(tag=>{
+                const tagTable = search? search.split(' ').map(tag=>{
                     return `#${tag}`;
-                });
+                }) :undefined;
     
                 const tableDoc = await sequelizeConnect.transaction(async t=>{
                     return await Doc.findAndCountAll({
@@ -508,11 +508,11 @@ class DocService implements DocServiceInterface{
                                         {
                                             title:{
                                                 [Op.like]:{
-                                                    [Op.any]:search.split(' ').map(chaine=>`%${chaine}%`)
+                                                    [Op.any]:search? search.split(' ').map(chaine=>`%${chaine}%`):['']
                                                 }
                                             },
                                             deletedAt:{
-                                                [Op.not]:undefined
+                                                [Op.not]:null
                                             }
                                         }
                                     ]
@@ -526,7 +526,7 @@ class DocService implements DocServiceInterface{
                                         },
                                         {
                                             deletedAt:{
-                                                [Op.not]:undefined
+                                                [Op.not]:null
                                             }
                                         }
                                     ]

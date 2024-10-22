@@ -4,12 +4,13 @@ import cors from 'cors';
 import{
     indexRouter
 }from './router';
+import bridge from 'http2-express-bridge';
 
 class ExpressApp{
     public expressServer: Application;
 
     constructor(){
-        this.expressServer = express();
+        this.expressServer = bridge(express);
         this.configServer();
     }
 

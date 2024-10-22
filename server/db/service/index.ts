@@ -7,8 +7,14 @@ import distService from './dist.service';
 import recommandationService from './recommandation.service';
 import addListService from './addList.service';
 import viewService from './view.service';
+import histSearchService from './histSearch.service';
+import commentService from './comment.service';
+import likeService from './like.service';
+import dislikeService from './dislike.service';
+import { UserService } from './user.service';
 
 export {
     MatterService, courseService , playlistService , docService , videoService,
-    distService,recommandationService , addListService , viewService
+    distService,recommandationService , addListService , viewService , histSearchService,
+    commentService,likeService,dislikeService,UserService
 }

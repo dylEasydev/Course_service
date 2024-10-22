@@ -17,7 +17,7 @@ export class Course extends Model<
     
     declare readonly createdAt:CreationOptional<Date>;
     declare readonly updatedAt:CreationOptional<Date>;
-    declare readonly deletedAt:CreationOptional<Date>;
+    declare readonly deletedAt:CreationOptional<Date|null>;
 
     //alias associatons
     declare static associations: {

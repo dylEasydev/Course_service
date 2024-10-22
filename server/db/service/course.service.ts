@@ -22,7 +22,7 @@ class CourseService implements CourseServiceInterface{
         })
     }
 
-    updateCourse(instance: Course, title: string){
+    updateCourse(instance: Course, title?: string){
         return new Promise<Course>(async (resolve ,reject)=>{
             try {
                 const courseUpdate = await sequelizeConnect.transaction(async t=>{
@@ -282,7 +282,7 @@ class CourseService implements CourseServiceInterface{
                             }
                         ]
                     });
-                    await courseRestore?.restore();
+                    if(courseRestore)await courseRestore.restore();
                     return courseRestore;
                 });
                 resolve(courseFind);
@@ -291,6 +291,7 @@ class CourseService implements CourseServiceInterface{
             }
         })
     }
+
     findCourseOfMatter(subjectId: number , limit?:number , search = ''){
         return new Promise<{rows:Course[] ; count:number }>(async (resolve, reject) => {
             try {
@@ -301,8 +302,10 @@ class CourseService implements CourseServiceInterface{
                                 {subjectId},
                                 {
                                     title:{
-                                        [Op.like]:`%${search}%`
-                                    }
+                                        [Op.like]:{
+                                            [Op.any]:search? search.split('').map(chaine=>`%${chaine}%`):['']
+                                        }
+                                   }
                                 }
                             ]
                         },
@@ -467,7 +470,9 @@ class CourseService implements CourseServiceInterface{
                     return await Course.findAndCountAll({
                         where:{
                             title:{
-                                [Op.like]:`%${search}%`
+                                [Op.like]:{
+                                    [Op.any]:search? search.split('').map(chaine=>`%${chaine}%`):['']
+                                }
                             }
                         },
                         limit,
@@ -605,12 +610,14 @@ class CourseService implements CourseServiceInterface{
                             [Op.and]:[
                                 {
                                     deletedAt:{
-                                        [Op.not]:undefined
+                                        [Op.not]:null
                                     }
                                 },
                                 {
                                     title:{
-                                        [Op.like]:`%${search}%`
+                                        [Op.like]:{
+                                            [Op.any]:search? search.split('').map(chaine=>`%${chaine}%`):['']
+                                        }
                                     }
                                 }
                             ]

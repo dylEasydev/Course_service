@@ -4,67 +4,68 @@ import {videoService,distService,docService} from '../service';
 
 
 class RecommandationService implements RecommandationServiceInterface{
-    join(...args:number[][]){
-        return new Promise<number[]>(resolve=> {
-            const data = new Set<number>();
+    
+    join(...args:(number[]|undefined)[]){
+        return new Promise<number[]|undefined>(resolve=> {
+            const data:Set<number> = new Set<number>();
             for(const elts of args)
-                for(const value of elts) data.add(value);
+                if(elts) for(const value of elts) data.add(value);
             
-            resolve(Array.from(data));
+            resolve(Array.from(data))
         })
     }
     getSubjectIds
     <
-        T extends { matterSubscribes: Matter[]; }, T2 extends { course?: CourseInterface; }
-    >(userPreferences: T, ...data: T2[][]){
-        return new Promise<number[]>(async resolve => {
-            const subjectSubscribes = userPreferences.matterSubscribes.map(matter=>{
+        T extends { matterSubscribes?: Matter[]; }, T2 extends { course?: CourseInterface; }
+    >(userPreferences: T, ...data: (T2[]|undefined)[]){
+        return new Promise<number[]|undefined>(async resolve => {
+            const subjectSubscribes = userPreferences.matterSubscribes?userPreferences.matterSubscribes.map(matter=>{
                 return matter.id;
-            });
-            const subjectData:number[] = [];
+            }):undefined;
+            const subjectData:number[]|undefined = [];
             for(const elts of data)
-                for(const value of elts) subjectData.push(value.course?.subjectId as number);
+                if(elts) for(const value of elts) if(value.course)subjectData.push(value.course.subjectId);
             
             resolve(await this.join(subjectSubscribes,subjectData));
         })
     }
     getTeacherIds
     <
-        T extends { matterSubscribes: Matter[]; }, T2 extends { course?: CourseInterface; }
-    >(userPreferences: T, ...data: T2[][]){
-        return new Promise<number[]>(async resolve => {
-            const teacherSubscribes = userPreferences.matterSubscribes.map(matter=>{
+        T extends { matterSubscribes?: Matter[]; }, T2 extends { course?: CourseInterface; }
+    >(userPreferences: T, ...data: (T2[]|undefined)[]){
+        return new Promise<number[]|undefined>(async resolve => {
+            const teacherSubscribes = userPreferences.matterSubscribes?userPreferences.matterSubscribes.map(matter=>{
                 return matter.userId;
-            })
-            const teacherData:number[]=[];
+            }):undefined;
+            const teacherData:number[]|undefined =[];
             for(const elts of data)
-                for(const value of elts) teacherData.push(value.course?.teacherId as number);
+                if(elts)for(const value of elts) if(value.course)teacherData.push(value.course.teacherId);
     
             resolve(await this.join(teacherData , teacherSubscribes));
         })
     }
     getdomainIds<
-        T extends { matterSubscribes: Matter[]; domainSubscribes: Domain[]; }, T2 extends { course?: CourseInterface; }
-    >(userPreferences: T, ...data: T2[][]){
-        return new Promise<number[]>(async resolve => {
-            const domainSubscribes = userPreferences.domainSubscribes.map(domain=>{
+        T extends { matterSubscribes?: Matter[]; domainSubscribes?: Domain[]; }, T2 extends { course?: CourseInterface; }
+    >(userPreferences: T, ...data: (T2[]|undefined)[]){
+        return new Promise<number[]|undefined>(async resolve => {
+            const domainSubscribes = userPreferences.domainSubscribes? userPreferences.domainSubscribes.map(domain=>{
                 return domain.id;
-            })
-            const domainMatter = userPreferences.matterSubscribes.map(matter=>{
+            }):undefined;
+            const domainMatter = userPreferences.matterSubscribes?userPreferences.matterSubscribes.map(matter=>{
                 return matter.domainId;
-            })
-            const domainData:number[] = [];
+            }):undefined;
+            const domainData:number[]|undefined = [];
             for(const elts of data)
-                for(const value of elts) domainData.push(value.course?.domainId as number);
+                if(elts) for(const value of elts) if(value.course)domainData.push(value.course.domainId);
             resolve(await this.join(domainData,domainSubscribes,domainMatter));
         })
     }
     getVideo(userPreferences: Preferences,limit?:number){
         return new Promise<{ data: VideoInterface; poids: number; }[]>(async(resolve, reject)=>{
             try {
-                const searchTerms = userPreferences.histSearch.map(search=>{
+                const searchTerms = userPreferences.histSearch?userPreferences.histSearch.map(search=>{
                     return search.searchTerm;
-                });           
+                }):undefined;           
                 const preRecommandation = await videoService.findPreRecommandation(
                     await this.getSubjectIds(userPreferences,userPreferences.videoLikes,userPreferences.videoComments,userPreferences.videoViews),
                     await this.getdomainIds(userPreferences , userPreferences.videoComments ,userPreferences.videoLikes,userPreferences.videoViews),
@@ -74,11 +75,13 @@ class RecommandationService implements RecommandationServiceInterface{
                 );
                 const recommandation = await Promise.all(
                     preRecommandation.map(async video=>{
-                        const coutComments = await distService.coutItem(video , userPreferences.videoComments);
-                        const coutLikes = await distService.coutItem(video , userPreferences.videoLikes);
-                        const coutDislikes = await distService.coutItem(video , userPreferences.videoDisLikes);
-                        const coutViews = await distService.coutItem(video , userPreferences.videoViews)
-                        const coutTerms = await distService.distanceSearchsTerms(video, searchTerms);
+                        const [coutComments,coutLikes,coutDislikes,coutViews,coutTerms] =await Promise.all([
+                            userPreferences.videoComments?await distService.coutItem(video, userPreferences.videoComments):0, 
+                            userPreferences.videoLikes?await distService.coutItem(video , userPreferences.videoLikes):0,
+                            userPreferences.videoDisLikes?await distService.coutItem(video , userPreferences.videoDisLikes):0,
+                            userPreferences.videoViews?await distService.coutItem(video,userPreferences.videoViews):0,
+                            searchTerms?await distService.distanceSearchsTerms(video, searchTerms):0
+                        ]);
                         const cout = (100*coutLikes)+(100*coutComments)+(50*coutViews)+(50*coutTerms)-(25*coutDislikes);
                         return {data:video , poids:cout};
                     })
@@ -96,9 +99,9 @@ class RecommandationService implements RecommandationServiceInterface{
     getDoc(userPreferences: Preferences,limit?:number){
         return new Promise<{ data: DocInterface; poids: number; }[]>(async(resolve, reject)=>{
             try {
-                const searchTerms = userPreferences.histSearch.map(search=>{
+                const searchTerms =userPreferences.histSearch?userPreferences.histSearch.map(search=>{
                     return search.searchTerm;
-                });           
+                }):undefined;           
                 const preRecommandation = await docService.findPreRecommandation(
                     await this.getSubjectIds(userPreferences,userPreferences.docLikes,userPreferences.docComments,userPreferences.docViews),
                     await this.getdomainIds(userPreferences , userPreferences.docComments ,userPreferences.docLikes,userPreferences.docViews),
@@ -108,11 +111,13 @@ class RecommandationService implements RecommandationServiceInterface{
                 );
                 const recommandation = await Promise.all(
                     preRecommandation.map(async doc=>{
-                        const coutComments = await distService.coutItem(doc, userPreferences.docComments); 
-                        const coutLikes = await distService.coutItem(doc , userPreferences.docLikes);
-                        const coutDislikes = await distService.coutItem(doc , userPreferences.docDisLikes);
-                        const coutViews = await distService.coutItem(doc,userPreferences.docViews);
-                        const coutTerms = await distService.distanceSearchsTerms(doc, searchTerms);
+                        const [coutComments,coutLikes,coutDislikes,coutViews,coutTerms] =await Promise.all([
+                            userPreferences.docComments?await distService.coutItem(doc, userPreferences.docComments):0, 
+                            userPreferences.docLikes?await distService.coutItem(doc , userPreferences.docLikes):0,
+                            userPreferences.docDisLikes?await distService.coutItem(doc , userPreferences.docDisLikes):0,
+                            userPreferences.docViews?await distService.coutItem(doc,userPreferences.docViews):0,
+                            searchTerms?await distService.distanceSearchsTerms(doc, searchTerms):0
+                        ]);
                         const cout = (100*coutLikes)+(100*coutComments)+(50*coutViews)+(50*coutTerms)-(25*coutDislikes);
                         return {data:doc , poids:cout};
                     })

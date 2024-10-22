@@ -9,7 +9,7 @@ class AddListService implements AddListServiceInterface{
         return new Promise<AddListInterface>(async(resolve, reject) => {
             try {
                 const addlist = await sequelizeConnect.transaction(async t=>{
-                    return AddList.findOrCreate({
+                    return await AddList.findOrCreate({
                         where:{
                             playId:playlist.id,
                             courseId:course.id

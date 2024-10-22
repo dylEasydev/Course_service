@@ -1,22 +1,21 @@
 import { Op } from 'sequelize';
-import { Doc, sequelizeConnect, Video, View } from '../../db';
+import { Doc, Liked, sequelizeConnect, Video } from '../../db';
 import { DocInterface, VideoInterface } from '../interface';
-import { ViewServiceInterface } from './interface';
+import { LikeServiceInterface } from './interface';
 
-class ViewService implements ViewServiceInterface{
+class LikeService implements LikeServiceInterface{
     
-    findAllVideo(ip?: string, userId?: number) {
+    findAllVideo(userId: number) {
         return new Promise<VideoInterface[]>(async (resolve, reject) => {
             try {
                 const tabIdVideos = await sequelizeConnect.transaction(async t=>{
-                    const tabviews = await View.findAll({
+                    const tabLiked = await Liked.findAll({
                         where:{
-                            ip_user:ip?ip:null,
-                            userId:userId?userId:null,
+                            userId,
                             nameTable:Video.tableName
                         }
                     })
-                    return tabviews.map(view=>{return view.foreingId ;})
+                    return tabLiked.map(like=>{return like.foreingId ;})
                 });
 
                 const tabVideos = await sequelizeConnect.transaction(async t=>{
@@ -93,18 +92,17 @@ class ViewService implements ViewServiceInterface{
         })
     }
 
-    findAllDoc(ip?: string, userId?: number) {
+    findAllDoc(userId?: number) {
         return new Promise<DocInterface[]>(async (resolve, reject) => {
             try {
                 const tabIdDocs = await sequelizeConnect.transaction(async t=>{
-                    const tabviews = await View.findAll({
+                    const tabLiked = await Liked.findAll({
                         where:{
-                            ip_user:ip?ip:null,
-                            userId:userId?userId:null,
+                            userId,
                             nameTable:Doc.tableName
                         }
                     })
-                    return tabviews.map(view=>{return view.foreingId ;})
+                    return tabLiked.map(like=>{return like.foreingId ;})
                 });
                 const tabDocs = await sequelizeConnect.transaction(async t=>{
                     return await Doc.findAll({
@@ -181,4 +179,4 @@ class ViewService implements ViewServiceInterface{
     }
 }
 
-export default new ViewService();
+export default new LikeService();

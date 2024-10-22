@@ -9,10 +9,10 @@ export interface ViewInterface extends Model<
     InferCreationAttributes<ViewInterface>
 >{
     id:CreationOptional<number>;
-    userId?:User['id'];
+    userId:CreationOptional<User['id']|null>;
     nameTable:string;
     foreingId:number;
-    ip_user:string;
+    ip_user:CreationOptional<string|null>;
 
     readonly createdAt:CreationOptional<Date>;
     readonly updatedAt:CreationOptional<Date>;

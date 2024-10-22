@@ -20,9 +20,8 @@ HistSearch.init({
     },
     ip_user:{
         type:DataTypes.STRING,
-        allowNull:false,
+        allowNull:true,
         validate:{
-            notNull:{msg:`adresseip non null !`},
             isIP:{msg:`veillez fournir une adresse IP !`}
         }
     },
